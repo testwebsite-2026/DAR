@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DAR Batangas — Municipal Records Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F2E8;
+    --surface: #FFFFFF;
+    --ink: #24261F;
+    --muted: #6B6858;
+    --line: #DCD5BF;
+    --green: #1C4A2E;
+    --green-dark: #0F2E1C;
+    --green-tint: #E7EEE7;
+    --gold: #B8873A;
+    --gold-tint: #F4E9D3;
+    --rust: #8A3B32;
+    --rust-tint: #F3E3DF;
+    --radius: 3px;
+    --shadow: 0 1px 2px rgba(15,20,15,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', -apple-system, sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Lora', Georgia, serif;
+    font-weight:600;
+    margin:0;
+    color:var(--green-dark);
+  }
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  /* ---------- Top ledger bar ---------- */
+  .letterhead{
+    background:var(--green);
+    color:#F5F2E8;
+    border-bottom:3px solid var(--gold);
+  }
+  .letterhead-inner{
+    max-width:1080px;
+    margin:0 auto;
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .seal{
+    width:42px;height:42px;border-radius:50%;
+    background:var(--gold-tint);
+    border:2px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .seal svg{width:22px;height:22px;}
+  .letterhead-text .agency{
+    font-size:11px;letter-spacing:.02em;
+    color:#D9E4D9;
+    margin:0 0 2px 0;
+  }
+  .letterhead-text h1{
+    color:#FFFFFF;
+    font-size:19px;
+    line-height:1.2;
+  }
+  .letterhead-right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;color:#D9E4D9;}
+  .btn-logout{
+    background:transparent;border:1px solid rgba(255,255,255,0.4);
+    color:#F5F2E8;padding:7px 14px;border-radius:var(--radius);
+    font-size:13px;font-weight:500;
+  }
+  .btn-logout:hover{background:rgba(255,255,255,0.1);}
+
+  /* ---------- Login ---------- */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    background:
+      linear-gradient(var(--green-dark), var(--green-dark)) top / 100% 210px no-repeat,
+      var(--bg);
+    padding:24px;
+  }
+  .login-card{
+    background:var(--surface);
+    width:100%;max-width:380px;
+    border:1px solid var(--line);
+    border-top:4px solid var(--gold);
+    border-radius:var(--radius);
+    box-shadow:0 8px 28px rgba(15,20,15,0.18);
+    padding:32px 30px 28px;
+    position:relative;
+    z-index:1;
+  }
+  .login-seal{
+    width:64px;height:64px;border-radius:50%;
+    background:var(--gold-tint);border:2px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .login-seal svg{width:34px;height:34px;}
+  .login-card h1{text-align:center;font-size:19px;line-height:1.35;}
+  .login-sub{
+    text-align:center;color:var(--muted);font-size:12.5px;
+    margin:6px 0 24px;letter-spacing:.01em;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:12.5px;font-weight:600;
+    color:var(--green-dark);margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;padding:9px 11px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:#FCFBF7;color:var(--ink);font-size:14px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--green);background:#fff;
+  }
+  .btn-primary{
+    width:100%;background:var(--green);color:#fff;border:none;
+    padding:11px 14px;border-radius:var(--radius);font-weight:600;
+    font-size:14.5px;letter-spacing:.01em;
+  }
+  .btn-primary:hover{background:var(--green-dark);}
+  .login-error{
+    background:var(--rust-tint);color:var(--rust);
+    border:1px solid #DDBCB3;border-radius:var(--radius);
+    padding:9px 11px;font-size:13px;margin-bottom:16px;
+  }
+  .login-hint{
+    text-align:center;margin-top:18px;font-size:11.5px;color:var(--muted);
+    border-top:1px dashed var(--line);padding-top:14px;
+  }
+  .login-hint code{background:var(--green-tint);padding:1px 5px;border-radius:2px;}
+
+  /* ---------- Shell / layout ---------- */
+  .shell{max-width:1080px;margin:0 auto;padding:28px 24px 64px;}
+  .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:18px;}
+  .breadcrumb button{
+    background:none;border:none;color:var(--green);font-weight:600;
+    padding:0;font-size:13px;
+  }
+  .breadcrumb button:hover{text-decoration:underline;}
+
+  /* ---------- Home hero / search ---------- */
+  .hero{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:5px solid var(--green);
+    border-radius:var(--radius);
+    padding:26px 28px;
+    margin-bottom:26px;
+    box-shadow:var(--shadow);
+  }
+  .hero-eyebrow{font-size:12px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+  .hero h2{font-size:23px;margin-bottom:6px;}
+  .hero p{color:var(--muted);font-size:13.5px;max-width:560px;margin-bottom:18px;}
+  .search-row{display:flex;gap:10px;}
+  .search-row input{
+    flex:1;padding:11px 14px;border:1px solid var(--line);
+    border-radius:var(--radius);font-size:14.5px;background:#FCFBF7;
+  }
+  .search-row input:focus{border-color:var(--green);background:#fff;}
+  .search-meta{margin-top:10px;font-size:12.5px;color:var(--muted);}
+
+  .search-results{
+    margin-top:14px;border-top:1px solid var(--line);
+  }
+
+  /* ---------- File Preview Panel ---------- */
+  .file-preview-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:5px solid var(--gold);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-bottom:22px;
+    box-shadow:var(--shadow);
+  }
+  .preview-title{
+    font-size:12.5px;font-weight:700;color:var(--green);
+    text-transform:uppercase;letter-spacing:.06em;
+    margin-bottom:14px;
+  }
+  .preview-container{
+    display:grid;grid-template-columns:1fr 280px;gap:20px;
+    align-items:start;
+  }
+  .preview-main{
+    background:#FCFBF7;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    min-height:320px;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .preview-image{
+    max-width:100%;
+    max-height:320px;
+    object-fit:contain;
+    border-radius:2px;
+  }
+  .preview-empty{
+    color:var(--muted);
+    font-size:14px;
+    text-align:center;
+  }
+  .preview-info{
+    background:#FCFBF7;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+  }
+  .info-row{
+    margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .info-row:last-child{
+    margin-bottom:0;padding-bottom:0;border-bottom:none;
+  }
+  .info-label{
+    font-size:11px;font-weight:700;
+    color:var(--green);text-transform:uppercase;
+    letter-spacing:.03em;margin-bottom:4px;
+  }
+  .info-value{
+    font-size:13.5px;color:var(--ink);
+    word-break:break-word;
+  }
+  .info-value.file-type{
+    background:var(--gold-tint);
+    color:#8A6A22;
+    display:inline-block;
+    padding:3px 8px;
+    border-radius:3px;
+    font-weight:500;
+  }
+
+  @media(max-width:768px){
+    .preview-container{
+      grid-template-columns:1fr;
+    }
+    .preview-main{
+      min-height:280px;
+    }
+  }
+  .result-row{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 2px;border-bottom:1px solid var(--line);
+    background:none;border-left:none;border-right:none;border-top:none;
+    width:100%;text-align:left;
+  }
+  .result-row:hover{background:var(--green-tint);}
+  .result-title{font-weight:600;color:var(--ink);font-size:14px;}
+  .result-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .tag{
+    display:inline-block;font-size:11px;font-weight:600;
+    padding:2px 8px;border-radius:20px;
+    background:var(--gold-tint);color:#8A6A22;
+    white-space:nowrap;
+  }
+
+  /* ---------- District sections + municipality grid ---------- */
+  .district-block{margin-bottom:26px;}
+  .district-title{
+    font-size:12.5px;font-weight:700;color:var(--green);
+    text-transform:uppercase;letter-spacing:.06em;
+    padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .muni-grid{
+    display:grid;grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:12px;
+  }
+  .muni-card{
+    background:var(--surface);border:1px solid var(--line);
+    border-left:4px solid var(--green);
+    border-radius:var(--radius);
+    padding:14px 15px;text-align:left;
+    display:flex;flex-direction:column;gap:8px;
+    box-shadow:var(--shadow);
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .muni-card:hover{border-left-color:var(--gold); transform:translateY(-1px);}
+  .muni-card .name{font-family:'Lora',serif;font-size:15.5px;font-weight:600;color:var(--green-dark);}
+  .muni-card .count{font-size:12px;color:var(--muted);}
+  .muni-card .count b{color:var(--ink);}
+
+  /* ---------- Municipality view ---------- */
+  .muni-header{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:16px;margin-bottom:22px;flex-wrap:wrap;
+  }
+  .muni-header h2{font-size:24px;}
+  .muni-header .district-label{font-size:12.5px;color:var(--gold);font-weight:700;margin-bottom:4px;}
+  .muni-header .file-count{font-size:13px;color:var(--muted);margin-top:6px;}
+
+  .panel{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+  }
+  .panel-header{
+    padding:16px 20px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:between;gap:10px;
+  }
+  .panel-header h3{font-size:15.5px;}
+  .panel-body{padding:20px;}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:640px){.grid-2{grid-template-columns:1fr;}}
+
+  .upload-panel{margin-bottom:22px;}
+  .file-input-wrap{
+    border:1.5px dashed var(--line);border-radius:var(--radius);
+    padding:16px;text-align:center;background:#FCFBF7;font-size:13px;color:var(--muted);
+  }
+  .file-input-wrap input[type=file]{display:block;margin:8px auto 0;font-size:13px;}
+  .file-chosen{margin-top:8px;font-size:12.5px;color:var(--green-dark);font-weight:600;}
+
+  .field-note{font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .btn-secondary{
+    background:#fff;border:1px solid var(--line);color:var(--ink);
+    padding:10px 16px;border-radius:var(--radius);font-weight:600;font-size:13.5px;
+  }
+  .btn-secondary:hover{border-color:var(--green);}
+  .btn-add{
+    background:var(--green);color:#fff;border:none;padding:10px 18px;
+    border-radius:var(--radius);font-weight:600;font-size:13.5px;
+  }
+  .btn-add:hover{background:var(--green-dark);}
+  .btn-add:disabled{background:#A9B7AC;cursor:not-allowed;}
+
+  .inline-msg{font-size:13px;padding:9px 11px;border-radius:var(--radius);margin-top:12px;}
+  .inline-msg.ok{background:var(--green-tint);color:var(--green-dark);border:1px solid #C6D8C6;}
+  .inline-msg.err{background:var(--rust-tint);color:var(--rust);border:1px solid #DDBCB3;}
+
+  /* file records list */
+  .records-panel .panel-header{flex-wrap:wrap;}
+  .local-search{
+    margin-left:auto;display:flex;align-items:center;gap:8px;
+  }
+  .local-search input{
+    padding:7px 11px;border:1px solid var(--line);border-radius:var(--radius);
+    font-size:13px;width:210px;background:#FCFBF7;
+  }
+  .local-search input:focus{border-color:var(--green);background:#fff;}
+
+  .record-list{border-top:1px solid var(--line);}
+  .record-row{
+    display:flex;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .record-row:hover{background:#FBFAF5;}
+  .record-icon{
+    width:36px;height:36px;border-radius:var(--radius);flex-shrink:0;
+    background:var(--gold-tint);border:1px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;color:#8A6A22;font-size:13px;font-weight:700;
+  }
+  .record-main{flex:1;min-width:0;}
+  .record-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .record-title{font-weight:700;font-size:14.5px;color:var(--ink);}
+  .record-desc{font-size:13px;color:var(--muted);margin-top:4px;}
+  .record-meta{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;}
+  .record-actions{display:flex;gap:8px;flex-shrink:0;}
+  .btn-mini{
+    background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:var(--radius);
+    font-size:12.5px;font-weight:600;color:var(--green-dark);
+  }
+  .btn-mini:hover{border-color:var(--green);background:var(--green-tint);}
+  .btn-mini.danger{color:var(--rust);}
+  .btn-mini.danger:hover{border-color:var(--rust);background:var(--rust-tint);}
+
+  .empty-state{
+    padding:38px 20px;text-align:center;color:var(--muted);font-size:13.5px;
+  }
+  .empty-state .big{font-family:'Lora',serif;color:var(--green-dark);font-size:16px;margin-bottom:6px;display:block;}
+
+  .loading-note{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+
+  footer.site-footer{
+    text-align:center;padding:24px;color:var(--muted);font-size:11.5px;
+    border-top:1px solid var(--line);margin-top:10px;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+
+  var MUNICIPALITIES = [
+    {district:"District I", names:["Balayan","Calatagan","Lemery","Lian","Nasugbu","Taal","Tuy"]},
+    {district:"District II", names:["Bauan","Lobo","Mabini","San Luis","San Pascual","Tingloy"]},
+    {district:"District III", names:["Agoncillo","Alitagtag","Balete","Cuenca","Laurel","Malvar","Mataas na Kahoy","San Nicolas","Sta. Teresita","Talisay"]},
+    {district:"District IV", names:["Ibaan","Padre Garcia","Rosario","San Jose","San Juan","Taysan"]}
+  ];
+
+  var CATEGORIES = [
+    "Certificate of Land Ownership Award (CLOA)",
+    "Land Distribution Report",
+    "Beneficiary Masterlist",
+    "Agrarian Case Record",
+    "Program Accomplishment Report",
+    "Other"
+  ];
+
+  function slugify(name){
+    return name.toLowerCase().replace(/\./g,'').replace(/\s+/g,'-');
+  }
+
+  var ALL_MUNI = [];
+  MUNICIPALITIES.forEach(function(d){
+    d.names.forEach(function(n){
+      ALL_MUNI.push({name:n, district:d.district, slug:slugify(n)});
+    });
+  });
+
+  var STORAGE_KEY = 'dar-batangas-records';
+
+  // ---- App state ----
+  var state = {
+    loggedIn:false,
+    loginError:'',
+    view:'home', // home | municipality
+    currentSlug:null,
+    homeSearch:'',
+    localSearch:'',
+    records:{}, // slug -> array of record objects
+    loaded:false,
+    loadError:'',
+    uploadMsg:null, // {type, text}
+    pendingFile:null // {name, type, size, base64}
+  };
+
+  function render(){
+    var root = document.getElementById('root');
+    if(!state.loggedIn){
+      root.innerHTML = renderLogin();
+      bindLogin();
+      return;
+    }
+    var html = renderLetterhead() + '<div class="shell">';
+    if(!state.loaded){
+      html += '<div class="loading-note">Loading municipal records…</div>';
+    } else if(state.view==='municipality'){
+      html += renderMunicipality(state.currentSlug);
+    } else {
+      html += renderHome();
+    }
+    html += '</div>' + renderFooter();
+    root.innerHTML = html;
+    bindGlobal();
+    if(state.loaded){
+      if(state.view==='municipality') bindMunicipality();
+      else bindHome();
+    }
+  }
+
+  // ---------------- LOGIN ----------------
+  function renderLogin(){
+    return ''+
+    '<div class="login-wrap">'+
+      '<div class="login-card">'+
+        '<div class="login-seal">'+sealSvg()+'</div>'+
+        '<h1>Department of Agrarian Reform<br>Provincial Office — Batangas</h1>'+
+        '<p class="login-sub">Municipal Records &amp; Document Portal</p>'+
+        (state.loginError ? '<div class="login-error">'+escapeHtml(state.loginError)+'</div>' : '')+
+        '<form id="login-form">'+
+          '<div class="field"><label for="username">Username</label>'+
+            '<input id="username" autocomplete="username" placeholder="Enter username" /></div>'+
+          '<div class="field"><label for="password">Password</label>'+
+            '<input id="password" type="password" autocomplete="current-password" placeholder="Enter password" /></div>'+
+          '<button type="submit" class="btn-primary">Sign in</button>'+
+        '</form>'+
+        '<div class="login-hint">Demo access &nbsp;·&nbsp; username <code>admin</code> &nbsp; password <code>admin123</code></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function bindLogin(){
+    var form = document.getElementById('login-form');
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var u = document.getElementById('username').value.trim();
+      var p = document.getElementById('password').value;
+      if(u==='admin' && p==='admin123'){
+        state.loggedIn = true;
+        state.loginError = '';
+        render();
+        loadRecords();
+      } else {
+        state.loginError = 'Incorrect username or password. Please try again.';
+        render();
+      }
+    });
+  }
+
+  // ---------------- LETTERHEAD / FOOTER ----------------
+  function renderLetterhead(){
+    return ''+
+    '<div class="letterhead"><div class="letterhead-inner">'+
+      '<div class="seal">'+sealSvg()+'</div>'+
+      '<div class="letterhead-text">'+
+        '<p class="agency">REPUBLIC OF THE PHILIPPINES &nbsp;·&nbsp; DEPARTMENT OF AGRARIAN REFORM</p>'+
+        '<h1>Batangas Provincial Municipal Records Portal</h1>'+
+      '</div>'+
+      '<div class="letterhead-right">'+
+        '<span>Signed in as <b>admin</b></span>'+
+        '<button class="btn-logout" id="logout-btn">Log out</button>'+
+      '</div>'+
+    '</div></div>';
+  }
+
+  function renderFooter(){
+    return '<footer class="site-footer">Department of Agrarian Reform — Batangas Provincial Office &nbsp;·&nbsp; Internal municipal records system</footer>';
+  }
+
+  function sealSvg(){
+    return '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'+
+      '<path d="M12 2L3 6v5c0 5.2 3.6 9.7 9 11 5.4-1.3 9-5.8 9-11V6l-9-4z" stroke="#B8873A" stroke-width="1.4"/>'+
+      '<path d="M8 12.5l2.5 2.5L16 9" stroke="#1C4A2E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '</svg>';
+  }
+
+  function bindGlobal(){
+    var lb = document.getElementById('logout-btn');
+    if(lb) lb.addEventListener('click', function(){
+      state.loggedIn = false;
+      render();
+    });
+  }
+
+  // ---------------- DATA LOADING ----------------
+  // Records are kept in this browser's localStorage. That means they live on
+  // this device/browser only — they will not appear on a different phone,
+  // computer, or browser profile. See README for how to move to a real
+  // shared backend later.
+  function loadRecords(){
+    try{
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      state.records = raw ? JSON.parse(raw) : {};
+    } catch(e){
+      state.records = {};
+    }
+    state.loaded = true;
+    render();
+  }
+
+  function saveRecords(cb){
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+      if(cb) cb(true);
+    } catch(e){
+      // e.g. storage full, or a file was too large to fit
+      if(cb) cb(false);
+    }
+  }
+
+  function getMuniRecords(slug){
+    return state.records[slug] || [];
+  }
+
+  function allRecordsFlat(){
+    var out = [];
+    ALL_MUNI.forEach(function(m){
+      (state.records[m.slug]||[]).forEach(function(r){
+        out.push(Object.assign({muniName:m.name, muniSlug:m.slug}, r));
+      });
+    });
+    return out;
+  }
+
+  // ---------------- HOME VIEW ----------------
+  function renderHome(){
+    var q = state.homeSearch.trim().toLowerCase();
+    var html = '';
+    html += '<div class="hero">'+
+      '<div class="hero-eyebrow">Provincial Records Directory</div>'+
+      '<h2>Find a document, or open a municipality</h2>'+
+      '<p>Search by document title, category, or municipality — or browse all 29 municipalities of Batangas below.</p>'+
+      '<div class="search-row">'+
+        '<input id="home-search" type="text" placeholder="Search documents, e.g. &quot;File 1&quot; or &quot;CLOA&quot;…" value="'+escapeHtml(state.homeSearch)+'" />'+
+      '</div>';
+
+    if(q){
+      var matches = allRecordsFlat().filter(function(r){
+        return (r.title||'').toLowerCase().indexOf(q)>-1 ||
+               (r.fileName||'').toLowerCase().indexOf(q)>-1 ||
+               (r.description||'').toLowerCase().indexOf(q)>-1 ||
+               (r.category||'').toLowerCase().indexOf(q)>-1 ||
+               (r.muniName||'').toLowerCase().indexOf(q)>-1;
+      });
+      html += '<div class="search-meta">'+matches.length+' document'+(matches.length===1?'':'s')+' found</div>';
+      html += '<div class="search-results">';
+      if(matches.length===0){
+        html += '<div class="empty-state"><span class="big">No matching documents</span>Try a different keyword, or open a municipality to upload one.</div>';
+      } else {
+        matches.forEach(function(r){
+          html += '<button class="result-row" data-goto="'+r.muniSlug+'" data-record="'+r.id+'">'+
+            '<span class="record-icon">'+fileGlyph(r.fileName)+'</span>'+
+            '<span style="flex:1;min-width:0;">'+
+              '<span class="result-title">'+escapeHtml(r.title)+'</span>'+
+              '<div class="result-sub">'+escapeHtml(r.muniName)+' &nbsp;·&nbsp; '+escapeHtml(r.category||'Uncategorized')+' &nbsp;·&nbsp; '+escapeHtml(r.dateAdded||'')+'</div>'+
+            '</span>'+
+            '<span class="tag">Open →</span>'+
+          '</button>';
+        });
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+
+    if(!q){
+      MUNICIPALITIES.forEach(function(d){
+        html += '<div class="district-block">'+
+          '<div class="district-title">'+escapeHtml(d.district)+'</div>'+
+          '<div class="muni-grid">';
+        d.names.forEach(function(n){
+          var slug = slugify(n);
+          var count = getMuniRecords(slug).length;
+          html += '<button class="muni-card" data-open="'+slug+'">'+
+            '<span class="name">'+escapeHtml(n)+'</span>'+
+            '<span class="count"><b>'+count+'</b> document'+(count===1?'':'s')+' on file</span>'+
+          '</button>';
+        });
+        html += '</div></div>';
+      });
+    }
+    return html;
+  }
+
+  function bindHome(){
+    var input = document.getElementById('home-search');
+    if(input){
+      input.addEventListener('input', function(e){
+        state.homeSearch = e.target.value;
+        render();
+        setTimeout(function(){
+          var el = document.getElementById('home-search');
+          if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        },0);
+      });
+    }
+    document.querySelectorAll('[data-open]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openMunicipality(btn.getAttribute('data-open'));
+      });
+    });
+    document.querySelectorAll('[data-goto]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openMunicipality(btn.getAttribute('data-goto'));
+      });
+    });
+  }
+
+  function openMunicipality(slug){
+    state.view = 'municipality';
+    state.currentSlug = slug;
+    state.localSearch = '';
+    state.uploadMsg = null;
+    state.pendingFile = null;
+    render();
+  }
+
+  // ---------------- MUNICIPALITY VIEW ----------------
+  function renderMunicipality(slug){
+    var muni = ALL_MUNI.filter(function(m){ return m.slug===slug; })[0];
+    if(!muni){
+      return '<div class="empty-state">Municipality not found.</div>';
+    }
+    var records = getMuniRecords(slug);
+    var q = state.localSearch.trim().toLowerCase();
+    var filtered = q ? records.filter(function(r){
+      return (r.title||'').toLowerCase().indexOf(q)>-1 ||
+             (r.fileName||'').toLowerCase().indexOf(q)>-1 ||
+             (r.description||'').toLowerCase().indexOf(q)>-1 ||
+             (r.category||'').toLowerCase().indexOf(q)>-1;
+    }) : records;
+
+    var html = '';
+    html += '<div class="breadcrumb"><button id="back-home">Municipal Records Directory</button> &nbsp;/&nbsp; '+escapeHtml(muni.name)+'</div>';
+    html += '<div class="muni-header"><div>'+
+        '<div class="district-label">'+escapeHtml(muni.district)+'</div>'+
+        '<h2>'+escapeHtml(muni.name)+'</h2>'+
+        '<div class="file-count">'+records.length+' document'+(records.length===1?'':'s')+' on file</div>'+
+      '</div></div>';
+
+    // Upload panel
+    html += '<div class="panel upload-panel"><div class="panel-header"><h3>Upload a new document</h3></div>';
+    html += '<div class="panel-body">'+
+      '<div class="field-note" style="margin:0 0 14px;">Attach a file, then record what it is so it can be found later.</div>'+
+      '<div class="file-input-wrap">'+
+        '<div>Select a file to upload</div>'+
+        '<input type="file" id="file-input" />'+
+        '<div class="file-chosen" id="file-chosen">'+(state.pendingFile ? ('Selected: '+escapeHtml(state.pendingFile.name)+' ('+formatSize(state.pendingFile.size)+')') : 'No file selected yet')+'</div>'+
+      '</div>'+
+      '<div class="grid-2" style="margin-top:16px;">'+
+        '<div class="field"><label for="doc-title">Document name / title</label>'+
+          '<input id="doc-title" placeholder="e.g. File 1 — CLOA Batch 3" /></div>'+
+        '<div class="field"><label for="doc-category">Document type</label>'+
+          '<select id="doc-category">'+
+            CATEGORIES.map(function(c){ return '<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>'; }).join('')+
+          '</select></div>'+
+      '</div>'+
+      '<div class="field"><label for="doc-desc">Description / other information</label>'+
+        '<textarea id="doc-desc" rows="2" placeholder="Notes, coverage period, reference number, remarks…"></textarea></div>'+
+      '<div class="form-actions">'+
+        '<button class="btn-add" id="add-doc-btn">Add to records</button>'+
+      '</div>'+
+      (state.uploadMsg ? ('<div class="inline-msg '+state.uploadMsg.type+'">'+escapeHtml(state.uploadMsg.text)+'</div>') : '')+
+    '</div></div>';
+
+    // File Preview Panel
+    if(state.pendingFile){
+      html += '<div class="file-preview-panel">'+
+        '<div class="preview-title">File Preview</div>'+
+        '<div class="preview-container">'+
+          '<div class="preview-main" id="preview-main">'+
+            (isImageFile(state.pendingFile.type) 
+              ? '<img src="data:'+state.pendingFile.type+';base64,'+state.pendingFile.base64+'" class="preview-image" />'
+              : '<div class="preview-empty">📄 '+escapeHtml(state.pendingFile.type||'File')+' file</div>')+
+          '</div>'+
+          '<div class="preview-info">'+
+            '<div class="info-row">'+
+              '<div class="info-label">File name</div>'+
+              '<div class="info-value">'+escapeHtml(state.pendingFile.name)+'</div>'+
+            '</div>'+
+            '<div class="info-row">'+
+              '<div class="info-label">File type</div>'+
+              '<div class="info-value file-type">'+escapeHtml(getFileType(state.pendingFile.type)||state.pendingFile.type||'Unknown')+'</div>'+
+            '</div>'+
+            '<div class="info-row">'+
+              '<div class="info-label">File size</div>'+
+              '<div class="info-value">'+formatSize(state.pendingFile.size)+'</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    // Records panel
+    html += '<div class="panel records-panel" style="margin-top:22px;">'+
+      '<div class="panel-header"><h3>Documents on file</h3>'+
+        '<div class="local-search"><input id="local-search" placeholder="Search within '+escapeHtml(muni.name)+'…" value="'+escapeHtml(state.localSearch)+'" /></div>'+
+      '</div>';
+
+    if(records.length===0){
+      html += '<div class="empty-state"><span class="big">No documents yet</span>Upload the first file for '+escapeHtml(muni.name)+' above.</div>';
+    } else if(filtered.length===0){
+      html += '<div class="empty-state"><span class="big">No matches</span>No documents in '+escapeHtml(muni.name)+' match “'+escapeHtml(state.localSearch)+'”.</div>';
+    } else {
+      html += '<div class="record-list">';
+      filtered.forEach(function(r){
+        html += '<div class="record-row">'+
+          '<span class="record-icon">'+fileGlyph(r.fileName)+'</span>'+
+          '<div class="record-main">'+
+            '<div class="record-title-row"><span class="record-title">'+escapeHtml(r.title)+'</span><span class="tag">'+escapeHtml(r.category||'Uncategorized')+'</span></div>'+
+            (r.description ? '<div class="record-desc">'+escapeHtml(r.description)+'</div>' : '')+
+            '<div class="record-meta">'+
+              '<span>File: '+escapeHtml(r.fileName||'—')+'</span>'+
+              (r.fileSize ? '<span>'+formatSize(r.fileSize)+'</span>' : '')+
+              '<span>Added '+escapeHtml(r.dateAdded||'')+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="record-actions">'+
+            (r.fileData ? '<button class="btn-mini" data-download="'+r.id+'">Download</button>' : '')+
+            '<button class="btn-mini danger" data-delete="'+r.id+'">Delete</button>'+
+          '</div>'+
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function bindMunicipality(){
+    var back = document.getElementById('back-home');
+    if(back) back.addEventListener('click', function(){
+      state.view='home'; state.homeSearch=''; render();
+    });
+
+    var fileInput = document.getElementById('file-input');
+    if(fileInput){
+      fileInput.addEventListener('change', function(e){
+        var f = e.target.files[0];
+        if(!f) return;
+        if(f.size > 1.5*1024*1024){
+          state.uploadMsg = {type:'err', text:'That file is larger than 1.5MB. Browser storage has limited space — please choose a smaller file, or just record its title/description without attaching it.'};
+          state.pendingFile = null;
+          render();
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          var result = ev.target.result; // data:mime;base64,XXXX
+          var base64 = result.split(',')[1];
+          state.pendingFile = {name:f.name, type:f.type, size:f.size, base64:base64};
+          state.uploadMsg = null;
+          render();
+        };
+        reader.onerror = function(){
+          state.uploadMsg = {type:'err', text:'Could not read that file. Please try again.'};
+          render();
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    var localSearch = document.getElementById('local-search');
+    if(localSearch){
+      localSearch.addEventListener('input', function(e){
+        state.localSearch = e.target.value;
+        render();
+        setTimeout(function(){
+          var el = document.getElementById('local-search');
+          if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        },0);
+      });
+    }
+
+    var addBtn = document.getElementById('add-doc-btn');
+    if(addBtn){
+      addBtn.addEventListener('click', function(){
+        var title = document.getElementById('doc-title').value.trim();
+        var category = document.getElementById('doc-category').value;
+        var desc = document.getElementById('doc-desc').value.trim();
+        if(!title){
+          state.uploadMsg = {type:'err', text:'Please give the document a name before adding it.'};
+          render();
+          return;
+        }
+        addBtn.disabled = true;
+        addBtn.textContent = 'Saving…';
+
+        var slug = state.currentSlug;
+        if(!state.records[slug]) state.records[slug] = [];
+        var record = {
+          id: 'r'+Date.now()+Math.floor(Math.random()*1000),
+          title: title,
+          category: category,
+          description: desc,
+          dateAdded: new Date().toLocaleDateString('en-PH', {year:'numeric', month:'short', day:'numeric'}),
+          fileName: state.pendingFile ? state.pendingFile.name : null,
+          fileType: state.pendingFile ? state.pendingFile.type : null,
+          fileSize: state.pendingFile ? state.pendingFile.size : null,
+          fileData: state.pendingFile ? state.pendingFile.base64 : null
+        };
+        state.records[slug].push(record);
+
+        saveRecords(function(success){
+          addBtn.disabled = false;
+          addBtn.textContent = 'Add to records';
+          if(success){
+            state.uploadMsg = {type:'ok', text:'Document added to '+ALL_MUNI.filter(function(m){return m.slug===slug;})[0].name+'.'};
+            state.pendingFile = null;
+          } else {
+            // roll back
+            state.records[slug] = state.records[slug].filter(function(r){ return r.id!==record.id; });
+            state.uploadMsg = {type:'err', text:'Could not save the document — this browser\'s storage may be full. Try removing an old attachment or using a smaller file.'};
+          }
+          render();
+        });
+      });
+    }
+
+    document.querySelectorAll('[data-delete]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-delete');
+        var slug = state.currentSlug;
+        if(!confirm('Delete this document from the records? This cannot be undone.')) return;
+        var before = state.records[slug];
+        state.records[slug] = before.filter(function(r){ return r.id!==id; });
+        saveRecords(function(success){
+          if(!success){
+            state.records[slug] = before;
+            state.uploadMsg = {type:'err', text:'Could not delete the document. Please try again.'};
+          }
+          render();
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-download]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-download');
+        var slug = state.currentSlug;
+        var record = (state.records[slug]||[]).filter(function(r){ return r.id===id; })[0];
+        if(!record || !record.fileData) return;
+        try{
+          var link = document.createElement('a');
+          link.href = 'data:'+(record.fileType||'application/octet-stream')+';base64,'+record.fileData;
+          link.download = record.fileName || 'document';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }catch(e){
+          alert('Could not download this file.');
+        }
+      });
+    });
+  }
+
+  // ---------------- helpers ----------------
+  function fileGlyph(name){
+    if(!name) return '＋';
+    var ext = (name.split('.').pop()||'').toUpperCase().slice(0,4);
+    return ext || 'DOC';
+  }
+  function formatSize(bytes){
+    if(!bytes) return '';
+    if(bytes<1024) return bytes+' B';
+    if(bytes<1024*1024) return (bytes/1024).toFixed(0)+' KB';
+    return (bytes/(1024*1024)).toFixed(1)+' MB';
+  }
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function isImageFile(mimeType){
+    if(!mimeType) return false;
+    return mimeType.startsWith('image/');
+  }
+  function getFileType(mimeType){
+    if(!mimeType) return 'Unknown';
+    var mimeMap = {
+      'image/jpeg': 'JPEG Image',
+      'image/png': 'PNG Image',
+      'image/gif': 'GIF Image',
+      'image/webp': 'WebP Image',
+      'application/pdf': 'PDF Document',
+      'application/msword': 'Word Document',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document',
+      'text/plain': 'Text File',
+      'application/json': 'JSON File',
+      'text/csv': 'CSV File'
+    };
+    return mimeMap[mimeType] || mimeType.split('/')[1] || 'File';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
